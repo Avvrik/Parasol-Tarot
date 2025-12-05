@@ -4,98 +4,8 @@ import { join } from 'path';
 import sharp from 'sharp';
 
 // =============================================================================
-// PARASOL TAROT CARD STYLES
+// PARASOL TAROT CARD
 // =============================================================================
-const OUTFIT_STYLES = [
-  {
-    name: 'THE_MAGICIAN',
-    description: `**THE_MAGICICAN**: Parasol Tarot Card Theme
-- Background aesthetic: Mystical atmosphere with classic tarot symbols (wands, pentagrams, magical tools) in Parasol brand colors (green/teal #81B29A, coral #E07A5F, cream #F4F1DE, dark blue #3D405B, light yellow #F2CC8F)
-- Classic tarot elements: Wand symbols, pentagrams, magical circles, mystical tools, arcane symbols
-- Background decorative elements: Parasol spiral patterns combined with classic Magician card symbols (infinity symbol, wand, cup, sword, pentacle)
-- Tarot card style: Vertical portrait format, ornate borders with mystical symbols
-- Border/frame: Ornate tarot card borders with magical symbols and Parasol spiral patterns
-- Background theme: Confident, powerful, mystical energy with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_HIGH_PRIESTESS',
-    description: `**THE_HIGH_PRIESTESS**: Parasol Tarot Card Theme
-- Background aesthetic: Serene and mysterious atmosphere with classic tarot symbols (moons, pillars, veils, pomegranates) in Parasol brand colors
-- Classic tarot elements: Moon symbols, crescent moons, pillars, veil patterns, pomegranate symbols, sacred geometry
-- Background decorative elements: Parasol spiral patterns combined with classic High Priestess card symbols (moon phases, pillars, sacred symbols)
-- Tarot card style: Vertical portrait format, ornate borders with lunar and sacred symbols
-- Border/frame: Ornate tarot card borders with moon symbols and Parasol spiral patterns
-- Background theme: Wise, contemplative, esoteric knowledge with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_EMPRESS',
-    description: `**THE_EMPRESS**: Parasol Tarot Card Theme
-- Background aesthetic: Luxurious and nurturing atmosphere with classic tarot symbols (stars, nature elements, crown symbols) in Parasol brand colors
-- Classic tarot elements: Star symbols, nature patterns, crown symbols, wheat/grain symbols, floral patterns, pentacle symbols
-- Background decorative elements: Parasol spiral patterns combined with classic Empress card symbols (stars, nature, abundance symbols)
-- Tarot card style: Vertical portrait format, ornate borders with nature and star symbols
-- Border/frame: Ornate tarot card borders with regal symbols and Parasol spiral patterns
-- Background theme: Nurturing, abundant, creative power with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_EMPEROR',
-    description: `**THE_EMPEROR**: Parasol Tarot Card Theme
-- Background aesthetic: Strong and commanding atmosphere with classic tarot symbols (mountains, throne symbols, ram heads, geometric patterns) in Parasol brand colors
-- Classic tarot elements: Mountain symbols, throne patterns, ram head symbols, geometric structures, sword symbols, authoritative symbols
-- Background decorative elements: Parasol spiral patterns combined with classic Emperor card symbols (mountains, structures, power symbols)
-- Tarot card style: Vertical portrait format, ornate borders with structural and power symbols
-- Border/frame: Ornate tarot card borders with authoritative symbols and Parasol spiral patterns
-- Background theme: Authoritative, structured, worldly power with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_STAR',
-    description: `**THE_STAR**: Parasol Tarot Card Theme
-- Background aesthetic: Hopeful and inspiring atmosphere with classic tarot symbols (large star, smaller stars, water symbols, tree symbols) in Parasol brand colors
-- Classic tarot elements: Large central star, multiple smaller stars, water/wave symbols, tree/nature symbols, celestial patterns
-- Background decorative elements: Parasol spiral patterns combined with classic Star card symbols (stars, water, celestial elements)
-- Tarot card style: Vertical portrait format, ornate borders with star and celestial symbols
-- Border/frame: Ornate tarot card borders with star symbols and Parasol spiral patterns
-- Background theme: Serene, hopeful, cosmic inspiration with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_MOON',
-    description: `**THE_MOON**: Parasol Tarot Card Theme
-- Background aesthetic: Mysterious and intuitive atmosphere with classic tarot symbols (full moon, crescent moon, towers, water, dog/wolf symbols) in Parasol brand colors
-- Classic tarot elements: Full moon, crescent moon phases, tower symbols, water/wave patterns, animal symbols, path symbols
-- Background decorative elements: Parasol spiral patterns combined with classic Moon card symbols (moon phases, water, mysterious elements)
-- Tarot card style: Vertical portrait format, ornate borders with lunar and mystical symbols
-- Border/frame: Ornate tarot card borders with moon symbols and Parasol spiral patterns
-- Background theme: Intuitive, mysterious, hidden knowledge with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_SUN',
-    description: `**THE_SUN**: Parasol Tarot Card Theme
-- Background aesthetic: Bright and joyful atmosphere with classic tarot symbols (radiating sun, sunflowers, wall symbols, child symbols) in Parasol brand colors
-- Classic tarot elements: Large radiating sun, sun rays, sunflower symbols, wall/boundary symbols, child/youth symbols, bright patterns
-- Background decorative elements: Parasol spiral patterns combined with classic Sun card symbols (sun, rays, joyful elements)
-- Tarot card style: Vertical portrait format, ornate borders with solar and radiant symbols
-- Border/frame: Ornate tarot card borders with sun symbols and Parasol spiral patterns
-- Background theme: Joyful, radiant, life energy with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-  {
-    name: 'THE_WORLD',
-    description: `**THE_WORLD**: Parasol Tarot Card Theme
-- Background aesthetic: Complete and fulfilled atmosphere with classic tarot symbols (wreath, four elements symbols, world symbols) in Parasol brand colors
-- Classic tarot elements: Wreath/circle symbols, four element symbols (earth, air, fire, water), world/globe symbols, completion symbols
-- Background decorative elements: Parasol spiral patterns combined with classic World card symbols (wreath, elements, unity symbols)
-- Tarot card style: Vertical portrait format, ornate borders with universal and completion symbols
-- Border/frame: Ornate tarot card borders with world symbols and Parasol spiral patterns
-- Background theme: Complete, fulfilled, universal wisdom with classic tarot card imagery
-- Use only Parasol brand colors for all tarot symbols and decorative elements`,
-  },
-];
 
 const TAROT_BACKGROUNDS = [
   'background-01.png',
@@ -105,59 +15,61 @@ const TAROT_BACKGROUNDS = [
   'background-05.png',
 ];
 
-const BRAND_COLORS = {
-  primary: '#81B29A',
-  secondary: '#F4F1DE',
-  accent: '#3D405B',
-  highlight: '#E07A5F',
-  light: '#F2CC8F',
-};
-
-const geminiClient = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-});
-
 function ensureApiKey() {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set');
   }
 }
 
-function buildTarotPrompt(styleDescription: string) {
-  return `You are editing the provided Twitter avatar into a Parasol-branded tarot portrait.
+const geminiClient = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+});
 
-STYLE FOCUS:
-${styleDescription}
+type EyePoint = { x: number; y: number };
+type EyePositions = { leftEye: EyePoint; rightEye: EyePoint };
 
-GOALS:
-- Keep the person recognizable with the same facial identity, expression, and pose.
-- Remove the original background completely and return transparency behind the subject.
-- Gently align the crop so the head and shoulders are centered in a vertical tarot composition. Slight zoom or reframing is allowed if it improves the card layout.
-- Add a soft circular halo around the head using Parasol colors (${BRAND_COLORS.primary}, ${BRAND_COLORS.highlight}, ${BRAND_COLORS.light}). The halo should feel ethereal and refined, not overpowering.
-- Subtly harmonize clothing colors to the Parasol palette while keeping the same garments and silhouettes.
-- Preserve photographic quality (no cartoon or illustration redraws).
+// -----------------------------------------------------------------------------
+// Prompts
+// -----------------------------------------------------------------------------
 
-OUTPUT REQUIREMENTS:
-- Return a single PNG with transparency.
-- Include only the person and the soft halo. Do NOT add text, logos, borders, tarot frames, or any other decorative scene elements.
-- The background must remain transparent so the server can composite the subject onto a tarot background later.`;
+function buildTarotCutoutPrompt(): string {
+  return `
+You are editing a portrait photo for a tarot-style trading card.
+
+TASK
+- Remove the background completely.
+- Keep ONLY the person as they appear in the input image.
+- Do NOT add any new objects, shapes, patterns, glow, or effects.
+
+WHAT TO KEEP
+- Keep the person's face, hair, expression, and pose exactly as in the original.
+- Preserve the exact scale and crop of the person.
+- Do NOT zoom out, crop tighter, shrink, rotate, or reposition the person.
+
+BACKGROUND & TRANSPARENCY (STRICT)
+- Every pixel that does not belong to the person must be fully transparent (alpha = 0).
+- Do NOT generate any background colors, gradients, frames, canvases, or squares.
+- No black, dark, or colored rectangles behind the person.
+- No checkerboard pattern, no white fill.
+
+STRICTLY FORBIDDEN
+- Do NOT add glow, halos, light rays, or any special effects.
+- Do NOT draw extra objects, icons, text, or symbols.
+- Do NOT stylize or repaint the person.
+
+OUTPUT
+- Return a single PNG with RGBA channels.
+- Only the pixels belonging to the person should be non-transparent.
+`.trim();
 }
 
-function getUserStyle(username: string): typeof OUTFIT_STYLES[0] {
-  let hash = 0;
-  for (let i = 0; i < username.length; i++) {
-    const char = username.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
 
-  const styleIndex = Math.abs(hash) % OUTFIT_STYLES.length;
-  return OUTFIT_STYLES[styleIndex];
-}
-
-function selectBackground(username?: string) {
+function selectBackground(username?: string): string {
   if (!username) return TAROT_BACKGROUNDS[0];
-  const score = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const score = username.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
   return TAROT_BACKGROUNDS[score % TAROT_BACKGROUNDS.length];
 }
 
@@ -178,102 +90,574 @@ async function fetchImageBuffer(imageUrl: string): Promise<Buffer> {
   return Buffer.from(arrayBuffer);
 }
 
-async function generateTransparentPortrait(avatarBuffer: Buffer, style: typeof OUTFIT_STYLES[0]): Promise<Buffer> {
+// -----------------------------------------------------------------------------
+// Checkerboard remover (flood-fill from borders)
+// -----------------------------------------------------------------------------
+
+async function removeCheckerboardBackground(imageBuffer: Buffer): Promise<Buffer> {
+  const img = sharp(imageBuffer);
+  const { data, info } = await img
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const width = info.width;
+  const height = info.height;
+  const channels = info.channels;
+  const pixels = new Uint8Array(data);
+
+  const idxOf = (x: number, y: number) => y * width + x;
+  const candidate = new Uint8Array(width * height);
+  const inBackground = new Uint8Array(width * height);
+  const queue: [number, number][] = [];
+
+  // Step 1: mark near-white, low-chroma pixels as checkerboard candidates
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pIdx = (y * width + x) * channels;
+      const r = pixels[pIdx];
+      const g = pixels[pIdx + 1];
+      const b = pixels[pIdx + 2];
+      const a = pixels[pIdx + 3];
+      if (a === 0) continue;
+
+      const maxc = Math.max(r, g, b);
+      const minc = Math.min(r, g, b);
+      const chroma = maxc - minc;
+      const lightGrey = maxc >= 220 && chroma <= 8;
+
+      if (lightGrey) {
+        candidate[idxOf(x, y)] = 1;
+      }
+    }
+  }
+
+  // Step 2: flood-fill from border candidates to mark background
+  const pushIfCandidate = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const id = idxOf(x, y);
+    if (candidate[id] && !inBackground[id]) {
+      inBackground[id] = 1;
+      queue.push([x, y]);
+    }
+  };
+
+  for (let x = 0; x < width; x++) {
+    pushIfCandidate(x, 0);
+    pushIfCandidate(x, height - 1);
+  }
+  for (let y = 0; y < height; y++) {
+    pushIfCandidate(0, y);
+    pushIfCandidate(width - 1, y);
+  }
+
+  while (queue.length) {
+    const [x, y] = queue.shift() as [number, number];
+    pushIfCandidate(x + 1, y);
+    pushIfCandidate(x - 1, y);
+    pushIfCandidate(x, y + 1);
+    pushIfCandidate(x, y - 1);
+  }
+
+  // Step 3: any background-marked pixel becomes transparent
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const id = idxOf(x, y);
+      if (!inBackground[id]) continue;
+      const pIdx = id * channels;
+      pixels[pIdx + 3] = 0;
+    }
+  }
+
+  return sharp(pixels, {
+    raw: { width, height, channels },
+  })
+    .png()
+    .toBuffer();
+}
+
+// -----------------------------------------------------------------------------
+// Bottom feather (soft fade-out instead of hard cut)
+// -----------------------------------------------------------------------------
+
+async function applyBottomFeather(imageBuffer: Buffer): Promise<Buffer> {
+  const { data, info } = await sharp(imageBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const width = info.width;
+  const height = info.height;
+  const channels = info.channels;
+  const pixels = new Uint8Array(data);
+
+  const featherStart = Math.round(height * 0.78); // bottom 22% fades out
+  const featherEnd = height - 1;
+
+  for (let y = featherStart; y < height; y++) {
+    const t = (y - featherStart) / Math.max(1, featherEnd - featherStart); // 0..1
+    const fade = 1 - t; // 1 -> 0
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * channels;
+      const a = pixels[idx + 3];
+      if (a === 0) continue;
+      pixels[idx + 3] = Math.round(a * fade);
+    }
+  }
+
+  return sharp(pixels, {
+    raw: { width, height, channels },
+  })
+    .png()
+    .toBuffer();
+}
+
+// -----------------------------------------------------------------------------
+// Gemini: transparent portrait
+// -----------------------------------------------------------------------------
+
+async function generateTransparentPortrait(avatarBuffer: Buffer): Promise<Buffer> {
   ensureApiKey();
 
   const base64 = avatarBuffer.toString('base64');
-  const prompt = buildTarotPrompt(style.description);
+  const prompt = buildTarotCutoutPrompt();
 
-  const result = await geminiClient.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [
-      {
-        role: 'user',
-        parts: [
+  const models = [
+    process.env.GEMINI_MODEL,
+    'gemini-2.5-flash-image-preview',
+    'gemini-1.5-flash',
+  ].filter(Boolean) as string[];
+
+  let lastError: Error | null = null;
+
+  for (const model of models) {
+    try {
+      const result = await geminiClient.models.generateContent({
+        model,
+        contents: [
           {
-            inlineData: {
-              data: base64,
-              mimeType: 'image/png',
-            },
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  data: base64,
+                  mimeType: 'image/png',
+                },
+              },
+              { text: prompt },
+            ],
           },
-          { text: prompt },
         ],
-      },
-    ],
-    generationConfig: {
-      responseMimeType: 'image/png',
-    },
-  });
+        generationConfig: {
+          responseMimeType: 'image/png',
+        },
+      } as any);
 
-  const candidates: any[] = (result as any).candidates ?? [];
-  const parts = candidates[0]?.content?.parts ?? [];
-  const imagePart = parts.find((p: any) => p.inlineData)?.inlineData ?? null;
+      const candidate = (result as any).candidates?.[0];
+      const inline = candidate?.content?.parts?.find((p: any) => p.inlineData)?.inlineData;
+      if (!inline?.data) {
+        throw new Error(`Model ${model} did not return image data`);
+      }
 
-  if (!imagePart?.data) {
-    console.error('Gemini response missing image data', JSON.stringify(result, null, 2));
-    throw new Error('Gemini did not return an edited image');
+      let img = Buffer.from(inline.data, 'base64');
+
+      img = await sharp(img).ensureAlpha().png().toBuffer();
+      img = await removeCheckerboardBackground(img);
+      img = await sharp(img).ensureAlpha().trim({ threshold: 0 }).png().toBuffer();
+      img = await applyBottomFeather(img);
+
+      return img;
+    } catch (err: any) {
+      console.warn(`[Gemini] model ${model} failed:`, err.message);
+      lastError = err;
+    }
   }
 
-  return Buffer.from(imagePart.data, 'base64');
+  throw lastError || new Error('All Gemini models failed');
 }
 
-async function compositeOnTarotBackground(avatarBuffer: Buffer, backgroundPath: string): Promise<Buffer> {
-  const backgroundAbsolutePath = join(process.cwd(), 'public', 'backgrounds', backgroundPath);
-  const backgroundBuffer = await fs.readFile(backgroundAbsolutePath);
+// -----------------------------------------------------------------------------
+// Gemini: eye detection
+// -----------------------------------------------------------------------------
 
-  const background = sharp(backgroundBuffer);
-  const backgroundMeta = await background.metadata();
-  const cardWidth = backgroundMeta.width || 1200;
-  const cardHeight = backgroundMeta.height || 1800;
+async function detectEyePositionsWithGemini(
+  avatarBuffer: Buffer
+): Promise<EyePositions | null> {
+  ensureApiKey();
 
-  const targetWidth = Math.round(cardWidth * 0.7);
-  const targetHeight = Math.round(cardHeight * 0.75);
+  const meta = await sharp(avatarBuffer).metadata();
+  const width = meta.width ?? 0;
+  const height = meta.height ?? 0;
+  if (!width || !height) return null;
 
-  const resizedAvatar = await sharp(avatarBuffer)
-    .resize({
-      width: targetWidth,
-      height: targetHeight,
-      fit: 'inside',
+  const base64 = avatarBuffer.toString('base64');
+
+  const prompt = `
+You receive a PNG portrait image of a person (head and upper body) on a transparent background.
+Your job is to locate the CENTER of each HUMAN EYE on the FACE and output their pixel coordinates.
+
+Important:
+- "Eye" means the real human eye (eyelids, sclera, iris, pupil).
+- Ignore any decorative shapes, stickers, spirals, or logos on headphones, hair, cheeks, forehead, or background.
+
+Coordinate system:
+- Use THIS image's pixels.
+- (0,0) is the TOP-LEFT corner.
+- "x" increases to the right, "y" increases downward.
+- width = ${width}, height = ${height}.
+
+Which eye:
+- "leftEye" is on the LEFT side of the image from the viewer's perspective.
+- "rightEye" is on the RIGHT side.
+
+Output (STRICT):
+Return ONLY:
+
+{"leftEye":{"x":123,"y":45},"rightEye":{"x":234,"y":47}}
+
+- x and y must be numbers.
+- No comments, no extra fields, no explanations.
+`.trim();
+
+  const model =
+    process.env.GEMINI_EYE_MODEL ||
+    process.env.GEMINI_MODEL ||
+    'gemini-1.5-flash';
+
+  try {
+    const result = await geminiClient.models.generateContent({
+      model,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { inlineData: { data: base64, mimeType: 'image/png' } },
+            { text: prompt },
+          ],
+        },
+      ],
+    } as any);
+
+    const text =
+      (result as any).candidates?.[0]?.content?.parts
+        ?.map((p: any) => p.text || '')
+        .join('') || '';
+
+    if (!text) return null;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      console.warn('[Gemini Eyes] JSON parse failed:', text);
+      return null;
+    }
+
+    if (
+      !parsed ||
+      !parsed.leftEye ||
+      !parsed.rightEye ||
+      typeof parsed.leftEye.x !== 'number' ||
+      typeof parsed.leftEye.y !== 'number' ||
+      typeof parsed.rightEye.x !== 'number' ||
+      typeof parsed.rightEye.y !== 'number'
+    ) {
+      console.warn('[Gemini Eyes] Bad shape:', parsed);
+      return null;
+    }
+
+    const clamp = (v: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v));
+
+    let left: EyePoint = {
+      x: clamp(Math.round(parsed.leftEye.x), 0, width - 1),
+      y: clamp(Math.round(parsed.leftEye.y), 0, height - 1),
+    };
+    let right: EyePoint = {
+      x: clamp(Math.round(parsed.rightEye.x), 0, width - 1),
+      y: clamp(Math.round(parsed.rightEye.y), 0, height - 1),
+    };
+
+    // fix swapped
+    if (left.x > right.x) {
+      [left, right] = [right, left];
+    }
+
+    // normalize Y into plausible band
+    const minY = Math.round(height * 0.18);
+    const maxY = Math.round(height * 0.55);
+    const avgY = clamp(Math.round((left.y + right.y) / 2), minY, maxY);
+    left.y = avgY;
+    right.y = avgY;
+
+    // inter-eye sanity
+    const dx = right.x - left.x;
+    const minDx = width * 0.08;
+    const maxDx = width * 0.5;
+    if (dx < minDx || dx > maxDx) {
+      const cx = width / 2;
+      const half = clamp(width * 0.14, minDx / 2, maxDx / 2);
+      left.x = Math.round(cx - half);
+      right.x = Math.round(cx + half);
+    }
+
+    console.log('[Gemini Eyes] final', { left, right });
+    return { leftEye: left, rightEye: right };
+  } catch (err: any) {
+    console.warn('[Gemini Eyes] error', err.message);
+    return null;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Glow – stronger + larger
+// -----------------------------------------------------------------------------
+
+async function addGlowAroundFigure(avatarBuffer: Buffer): Promise<Buffer> {
+  const avatar = sharp(avatarBuffer).ensureAlpha();
+  const meta = await avatar.metadata();
+  const width = meta.width || 0;
+  const height = meta.height || 0;
+  if (!width || !height) return avatarBuffer;
+
+  try {
+    const alpha = await avatar.clone().extractChannel('alpha').toBuffer();
+    const radius = Math.round(Math.min(width, height) * 0.12); // thicker glow
+
+    const blurred = await sharp(alpha, {
+      raw: { width, height, channels: 1 },
     })
+      .blur(radius)
+      .toBuffer();
+
+    const { data: maskData } = await sharp(blurred, {
+      raw: { width, height, channels: 1 },
+    })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const rgba = Buffer.alloc(width * height * 4);
+    for (let i = 0; i < maskData.length; i++) {
+      let a = maskData[i];
+      a = Math.min(255, Math.round(a * 2.0)); // much stronger glow
+
+      const idx = i * 4;
+      rgba[idx] = 255;
+      rgba[idx + 1] = 255;
+      rgba[idx + 2] = 255;
+      rgba[idx + 3] = a;
+    }
+
+    const glow = await sharp(rgba, {
+      raw: { width, height, channels: 4 },
+    })
+      .png()
+      .toBuffer();
+
+    return await sharp({
+      create: {
+        width,
+        height,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .composite([
+        { input: glow, blend: 'screen' },
+        { input: avatarBuffer, blend: 'over' },
+      ])
+      .png()
+      .toBuffer();
+  } catch (e) {
+    console.warn('[Glow] failed', e);
+    return avatarBuffer;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Compositing onto tarot background
+// -----------------------------------------------------------------------------
+
+async function compositeOnTarotBackground(
+  avatarTransparent: Buffer,
+  backgroundPath: string
+): Promise<Buffer> {
+  const bgPath = join(process.cwd(), 'public', 'backgrounds', backgroundPath);
+  const bgBuffer = await fs.readFile(bgPath);
+  const baseCard = sharp(bgBuffer);
+  const bgMeta = await baseCard.metadata();
+
+  const cardWidth = bgMeta.width || 1200;
+  const cardHeight = bgMeta.height || 1800;
+
+  // 1. Prepare avatar: ensure alpha & resize
+  let avatar = await sharp(avatarTransparent)
+    .ensureAlpha()
     .png()
     .toBuffer();
 
-  const resizedMeta = await sharp(resizedAvatar).metadata();
-  const finalAvatarWidth = resizedMeta.width || targetWidth;
-  const finalAvatarHeight = resizedMeta.height || targetHeight;
+  const illustrationBottom = Math.round(cardHeight * 0.62);
+  const minTop = Math.round(cardHeight * 0.15);
+  const maxAvatarWidth = Math.round(cardWidth * 0.6);
+  const maxAvatarHeight = illustrationBottom - minTop;
 
-  const left = Math.max(0, Math.round((cardWidth - finalAvatarWidth) / 2));
-  const centerY = cardHeight * 0.42;
-  const top = Math.max(0, Math.round(centerY - (finalAvatarHeight / 2)));
+  avatar = await sharp(avatar)
+    .resize({
+      width: maxAvatarWidth,
+      height: maxAvatarHeight,
+      fit: 'inside',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
 
-  const composited = await background
+  const avatarMeta = await sharp(avatar).metadata();
+  const avatarWidth = avatarMeta.width || maxAvatarWidth;
+  const avatarHeight = avatarMeta.height || maxAvatarHeight;
+
+  // 2. Eye overlays
+  const eyeFiles = ['eye1.png', 'eye2.png', 'eye3.png'];
+  const leftEyeFile = eyeFiles[Math.floor(Math.random() * eyeFiles.length)];
+  const rightEyeFile = eyeFiles[Math.floor(Math.random() * eyeFiles.length)];
+  let avatarWithEyes = avatar;
+
+  try {
+    const leftEyePath = join(process.cwd(), 'public', 'eyes', leftEyeFile);
+    const rightEyePath = join(process.cwd(), 'public', 'eyes', rightEyeFile);
+
+    const [leftEyeBuf, rightEyeBuf] = await Promise.all([
+      fs.readFile(leftEyePath),
+      fs.readFile(rightEyePath),
+    ]);
+
+    // slightly smaller stickers, so misalignment is less noticeable
+    const eyeWidth = Math.round(avatarWidth * 0.10);
+    const eyeHeight = Math.round(eyeWidth * 0.6);
+
+    const [leftResized, rightResized] = await Promise.all([
+      sharp(leftEyeBuf)
+        .resize({
+          width: eyeWidth,
+          height: eyeHeight,
+          fit: 'contain',
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
+        .ensureAlpha()
+        .png()
+        .toBuffer(),
+      sharp(rightEyeBuf)
+        .resize({
+          width: eyeWidth,
+          height: eyeHeight,
+          fit: 'contain',
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
+        .ensureAlpha()
+        .png()
+        .toBuffer(),
+    ]);
+
+    let eyePositions = await detectEyePositionsWithGemini(avatar);
+    if (!eyePositions) {
+      const y = Math.round(avatarHeight * 0.32);
+      eyePositions = {
+        leftEye: { x: Math.round(avatarWidth * 0.33), y },
+        rightEye: { x: Math.round(avatarWidth * 0.67), y },
+      };
+    }
+
+    const clamp = (v: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v));
+
+    // small vertical offset upwards so stickers sit on iris, not cheeks
+    const verticalOffset = Math.round(eyeHeight * 0.15);
+
+    const overlays = [
+      {
+        input: leftResized,
+        left: clamp(
+          eyePositions.leftEye.x - Math.round(eyeWidth / 2),
+          0,
+          Math.max(0, avatarWidth - eyeWidth),
+        ),
+        top: clamp(
+          eyePositions.leftEye.y - Math.round(eyeHeight / 2) - verticalOffset,
+          0,
+          Math.max(0, avatarHeight - eyeHeight),
+        ),
+        blend: 'over' as const,
+      },
+      {
+        input: rightResized,
+        left: clamp(
+          eyePositions.rightEye.x - Math.round(eyeWidth / 2),
+          0,
+          Math.max(0, avatarWidth - eyeWidth),
+        ),
+        top: clamp(
+          eyePositions.rightEye.y - Math.round(eyeHeight / 2) - verticalOffset,
+          0,
+          Math.max(0, avatarHeight - eyeHeight),
+        ),
+        blend: 'over' as const,
+      },
+    ];
+
+    avatarWithEyes = await sharp(avatar)
+      .composite(overlays)
+      .png()
+      .toBuffer();
+  } catch (e) {
+    console.warn('[Eyes] overlay failed', e);
+    avatarWithEyes = avatar;
+  }
+
+  // 3. Strong glow AFTER eyes and feather
+  const avatarWithGlow = await addGlowAroundFigure(avatarWithEyes);
+
+  // 4. Position on card
+  const avatarLeft = Math.max(0, Math.round((cardWidth - avatarWidth) / 2));
+  const freeVerticalSpace = illustrationBottom - minTop - avatarHeight;
+  const avatarTop = Math.max(
+    minTop,
+    Math.round(minTop + freeVerticalSpace / 2),
+  );
+
+  const finalCard = await baseCard
     .composite([
       {
-        input: resizedAvatar,
-        left,
-        top,
+        input: avatarWithGlow,
+        left: avatarLeft,
+        top: avatarTop,
+        blend: 'over',
       },
     ])
-    .png()
+    .png({ compressionLevel: 9, quality: 100 })
     .toBuffer();
 
-  return composited;
+  return finalCard;
 }
 
-export async function generateParasolTarotCard(imageUrl: string, username?: string): Promise<{ imageBase64: string; style: string; }> {
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
+export async function generateParasolTarotCard(
+  imageUrl: string,
+  username?: string,
+): Promise<{ imageBase64: string; style: string }> {
   const avatarBuffer = await fetchImageBuffer(imageUrl);
-  const style = getUserStyle(username || 'parasol');
-  const transparentPortrait = await generateTransparentPortrait(avatarBuffer, style);
-  const backgroundName = selectBackground(username);
-  const composited = await compositeOnTarotBackground(transparentPortrait, backgroundName);
+  const transparentPortrait = await generateTransparentPortrait(avatarBuffer);
+  const bgName = selectBackground(username);
+  const card = await compositeOnTarotBackground(transparentPortrait, bgName);
 
   return {
-    imageBase64: composited.toString('base64'),
-    style: style.name,
+    imageBase64: card.toString('base64'),
+    style: 'TAROT_CARD',
   };
 }
 
-export function getAssignedStyleName(username: string): string {
-  const style = getUserStyle(username);
-  return style.name;
+export function getAssignedStyleName(_username: string): string {
+  return 'TAROT_CARD';
 }

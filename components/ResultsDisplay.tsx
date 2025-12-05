@@ -63,7 +63,8 @@ export default function ResultsDisplay({
       <div className="w-full flex justify-center mt-4">
         <div className="w-full max-w-md">
           {/* Tarot card aspect ratio: height is 1.73x width (standard tarot card proportions ~2.75" x 4.75") */}
-          <div className="relative" style={{ aspectRatio: '1 / 1.73' }}>
+          {/* No overflow: hidden - ensure full card is visible including borders and text */}
+          <div className="relative rounded-lg shadow-2xl" style={{ aspectRatio: '1 / 1.73' }}>
             <Image
               src={`data:image/png;base64,${generatedImageBase64}`}
               alt="Your Parasol tarot card"
