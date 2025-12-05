@@ -1,20 +1,11 @@
-/**
- * Google Gemini API Client
- * Uses Gemini 2.5 Flash Image Preview for image editing
- * Documentation: https://ai.google.dev/gemini-api/docs/image-generation
- * 
- * CUSTOMIZE: Edit the OUTFIT_STYLES array below to match your brand's styles
- */
-
 import { GoogleGenAI } from '@google/genai';
-import { readFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import { join } from 'path';
 import sharp from 'sharp';
 
-// ============================================================================
+// =============================================================================
 // PARASOL TAROT CARD STYLES
-// ============================================================================
-// Each user gets assigned one tarot card archetype deterministically based on their username
+// =============================================================================
 const OUTFIT_STYLES = [
   {
     name: 'THE_MAGICIAN',
@@ -106,268 +97,182 @@ const OUTFIT_STYLES = [
   },
 ];
 
-// ============================================================================
-// PARASOL BRAND COLORS
-// ============================================================================
-// Color combinations:
-// 1. #81B29A (green/teal) with #E07A5F (coral) and #F4F1DE (cream)
-// 2. #81B29A (green/teal) with #3D405B (dark blue) and #F4F1DE (cream) and #F2CC8F (light yellow)
+const TAROT_BACKGROUNDS = [
+  'background-01.png',
+  'background-02.png',
+  'background-03.png',
+  'background-04.png',
+  'background-05.png',
+];
+
 const BRAND_COLORS = {
-  primary: '#81B29A',      // Parasol primary - green/teal (base color for both combinations)
-  secondary: '#F4F1DE',    // Parasol secondary - cream/beige (common to both combinations)
-  accent: '#3D405B',       // Parasol accent - dark blue/navy (from combination 2)
-  highlight: '#E07A5F',    // Parasol highlight - coral/salmon (from combination 1)
-  light: '#F2CC8F',        // Parasol light - light yellow/cream (from combination 2)
+  primary: '#81B29A',
+  secondary: '#F4F1DE',
+  accent: '#3D405B',
+  highlight: '#E07A5F',
+  light: '#F2CC8F',
 };
 
-// ============================================================================
-// PARASOL TAROT PROMPT
-// ============================================================================
-export const PARASOL_TAROT_PROMPT = `
-You are editing a user's TWITTER AVATAR into a Parasol-branded tarot card.
+const geminiClient = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+});
 
-INPUT:
-- One image: the user's Twitter avatar.
+function ensureApiKey() {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set');
+  }
+}
 
-OVERALL GOAL:
-- Transform the avatar into a Parasol tarot card.
-- The person must remain recognizably the same as in the original photo.
-- Keep the person at a natural size - do NOT zoom in too much on the face.
-- Show the person's head, shoulders, and upper body with comfortable spacing around them.
-- Generate ONLY the person themselves - do NOT add any frames, borders, ornaments, decorative elements, or effects.
-- Do NOT generate or modify any background - the background will be provided separately and must remain completely unchanged.
+function buildTarotPrompt(styleDescription: string) {
+  return `You are editing the provided Twitter avatar into a Parasol-branded tarot portrait.
 
-HARD CONSTRAINTS ON THE PERSON (DO NOT BREAK):
-1. Do NOT redraw the face.
-   - Keep the original facial features, proportions, skin, and expression.
-   - Do not replace the face with an illustration or new rendering.
-   - Do not change age, gender, or identity.
+STYLE FOCUS:
+${styleDescription}
 
-2. Do NOT change the head or body posture.
-   - Keep the same pose, head angle, and shoulder position as in the avatar.
-   - Do not turn the head, tilt it differently, or change the body orientation.
-
-3. Do NOT zoom in, crop, or resize the person.
-   - Keep the EXACT same framing and composition as the input avatar.
-   - Do NOT crop tighter or zoom in on the face.
-   - Do NOT make the person larger or smaller - keep them at the EXACT same size relative to the frame.
-   - Maintain the same distance from the camera - if the input shows head and shoulders, keep it exactly that way.
-   - If the input shows more of the body, keep that framing.
-   - Do NOT change the zoom level, crop the image, or resize the person in any way.
-   - The person should appear at the same size and scale as in the input image.
-
-4. Clothing:
-   - Keep the same garments and general shape.
-   - You may slightly adjust colors/lighting to better match the card, but do not turn a shirt into a robe, armor, etc.
-
-5. You may apply gentle global color grading to the entire image, but the person must still look like a natural photo of the same person, not a cartoon or heavily stylized illustration.
-
-CRITICAL - GENERATE ONLY THE PERSON, NO DECORATIVE ELEMENTS:
-- Your output MUST have a TRANSPARENT background or a single solid color that can be easily removed.
-- Generate ONLY the person themselves - do NOT add any frames, borders, ornaments, decorative elements, patterns, symbols, text, or visual effects.
-- Do NOT add any card frames, borders, or decorative elements around the person.
-- Do NOT add any corner ornaments, pinwheels, spirals, or decorative patterns anywhere.
-- Do NOT add any light rays, halos, glows, particles, or effects around the person.
-- Do NOT add any text, titles, or symbols anywhere in the image.
-- Do NOT generate, create, paint, or draw any background scene, pattern, texture, or image.
-- Do NOT add any background colors, gradients, or images behind the person.
-- The background area must be completely empty and transparent - generate ONLY the person, nothing else.
-- The background will be added programmatically from a separate image file that must remain completely unchanged.
-- Your job is ONLY to generate the person themselves on a transparent background - no decorative elements of any kind.
-
-WHAT YOU MAY DO:
-- Generate ONLY the person themselves - keep them looking natural and recognizable.
-- You may apply gentle color grading to the person to match the aesthetic, but keep it minimal.
-- The person should be centered in the image.
-- Everything else (background, frames, borders, ornaments, effects, text) will be handled separately - do NOT add any of these.
-
-PARASOL BRAND COLOR PALETTE (USE THESE AS PRIMARY COLORS):
-- Primary mint/teal: #81B29A (main green-teal, use for backgrounds, spirals, and primary decorative elements)
-- Secondary cream: #F4F1DE (soft off-white/parchment, use for subtle details and card base)
-- Dark navy/ink: #3D405B (use for borders, text, and strong accents)
-- Light yellow/cream: #F2CC8F (use for glows, halos, and warm highlights)
-- Coral accent: #E07A5F (use sparingly for small accent details only)
-
-These colors are provided for reference only - you should NOT be using them to create backgrounds, frames, ornaments, or glows.
-You are generating ONLY the person - no decorative elements should use these colors.
-
-PARASOL STYLE GUIDELINES:
-- Portrait orientation.
-- Generate ONLY the person - do NOT add any decorative patterns, spirals, motifs, ornaments, borders, frames, glows, halos, particles, text, or design elements of any kind.
-- Do NOT add any visual effects, light rays, or decorative elements anywhere.
-- The background area must be completely empty and transparent.
-- All decorative elements, frames, borders, ornaments, and text will be part of the separate background image - do NOT generate any of these.
-
-COMPOSITION:
-- Keep the EXACT same framing, composition, and size as the input avatar image.
-- Do NOT zoom in, crop, resize, or change the framing in any way.
-- Do NOT make the person larger - keep them at the EXACT same size relative to the frame as in the input.
-- Maintain the same distance from the camera as the input - if the input shows head and shoulders, keep it exactly that way.
-- Do NOT crop tighter or zoom in on the face - preserve the original zoom level and size.
-- Keep the person in the same position and at the same scale as in the input image.
-- The person should occupy the same amount of space in the frame as they do in the input image.
-- The background area must be completely empty, transparent, and untouched - NO stylization, NO additions, NO modifications, NO elements of any kind.
-- Do NOT add any effects, frames, borders, ornaments, or decorative elements - generate ONLY the person.
-- The background will be a separate image that must remain completely unchanged - your output should have an empty/transparent background with ONLY the person, nothing else.
+GOALS:
+- Keep the person recognizable with the same facial identity, expression, and pose.
+- Remove the original background completely and return transparency behind the subject.
+- Gently align the crop so the head and shoulders are centered in a vertical tarot composition. Slight zoom or reframing is allowed if it improves the card layout.
+- Add a soft circular halo around the head using Parasol colors (${BRAND_COLORS.primary}, ${BRAND_COLORS.highlight}, ${BRAND_COLORS.light}). The halo should feel ethereal and refined, not overpowering.
+- Subtly harmonize clothing colors to the Parasol palette while keeping the same garments and silhouettes.
+- Preserve photographic quality (no cartoon or illustration redraws).
 
 OUTPUT REQUIREMENTS:
-- A single high-quality image with ONLY the person - no frames, no borders, no ornaments, no decorative elements, no effects, no text, nothing else.
-- The person should be immediately recognizable as the same individual from the input avatar.
-- The background area must be completely transparent or a single removable color - NO elements, NO ornaments, NO overlays, NO decorations, NO frames, NO borders, NO text, NO effects of any kind.
-- Generate ONLY the person themselves on a transparent background - that's it.
-- The background will be provided separately and must remain completely unchanged - your output should be just the person on a transparent background.
-`;
+- Return a single PNG with transparency.
+- Include only the person and the soft halo. Do NOT add text, logos, borders, tarot frames, or any other decorative scene elements.
+- The background must remain transparent so the server can composite the subject onto a tarot background later.`;
+}
 
-// ============================================================================
-// Style Assignment Logic (Deterministic)
-// ============================================================================
-/**
- * Assigns a style to a user based on their username hash
- * Same username always gets the same style
- */
 function getUserStyle(username: string): typeof OUTFIT_STYLES[0] {
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
     const char = username.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash = hash & hash;
   }
-  
+
   const styleIndex = Math.abs(hash) % OUTFIT_STYLES.length;
-  const selectedStyle = OUTFIT_STYLES[styleIndex];
-  
-  console.log(`[STYLE] User "${username}" assigned style: ${selectedStyle.name} (index: ${styleIndex})`);
-  
-  return selectedStyle;
+  return OUTFIT_STYLES[styleIndex];
 }
 
-/**
- * Generate an outfit image from an avatar URL
- * @param avatarUrl - URL of the user's avatar image
- * @param username - Twitter username (used for deterministic style selection)
- * @param brandName - Optional brand/event name for the prompt
- */
-export async function generateOutfitImage(
-  avatarUrl: string,
-  username?: string,
-  brandName: string = 'your event'
-): Promise<string | null> {
-  try {
-    // STEP 1: Load the input PNG (with transparency) directly using sharp
-    let inputImageBuffer: Buffer;
-    
-    if (avatarUrl.startsWith('data:')) {
-      // Extract base64 data from data URL
-      const matches = avatarUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!matches || matches.length !== 3) {
-        throw new Error('Invalid base64 data URL format');
-      }
-      inputImageBuffer = Buffer.from(matches[2], 'base64');
-    } else {
-      // Fetch the image from the URL
-      const imageResponse = await fetch(avatarUrl);
-      if (!imageResponse.ok) {
-        throw new Error('Failed to fetch avatar image');
-      }
-      const imageArrayBuffer = await imageResponse.arrayBuffer();
-      inputImageBuffer = Buffer.from(imageArrayBuffer);
-    }
-    
-    console.log(`[Image Processing] STEP 1: Loaded input image: ${inputImageBuffer.length} bytes`);
-    
-    // Get input image dimensions
-    const inputMetadata = await sharp(inputImageBuffer).metadata();
-    const inputWidth = inputMetadata.width || 1024;
-    const inputHeight = inputMetadata.height || 1024;
-    console.log(`[Image Processing] Input image dimensions: ${inputWidth}x${inputHeight}`);
-    
-    // STEP 2: Load a background file from /public/backgrounds/*
-    // Random or selected (deterministic based on username)
-    const backgroundImageNames = [
-      'background-01',
-      'background-02',
-      'background-03',
-      'background-04',
-      'background-05',
-    ];
-    
-    let backgroundBuffer: Buffer | null = null;
-    let backgroundPath: string | null = null;
-    
-    // Select background deterministically based on username (or use first one)
-    const bgIndex = username && backgroundImageNames.length > 0
-      ? (username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % backgroundImageNames.length)
-      : 0;
-    
-    // Try to load the selected background (PNG first, then JPG)
-    const extensions = ['.png', '.jpg', '.jpeg'];
-    for (const ext of extensions) {
-      const imageName = `backgrounds/${backgroundImageNames[bgIndex]}${ext}`;
-      try {
-        backgroundPath = join(process.cwd(), 'public', imageName);
-        console.log(`[Image Processing] STEP 2: Attempting to load background: ${backgroundPath}`);
-        backgroundBuffer = readFileSync(backgroundPath);
-        console.log(`[Image Processing] ✓ Loaded background: ${imageName} (${backgroundBuffer.length} bytes)`);
-        break;
-      } catch (error) {
-        // Continue to next extension
-      }
-    }
-    
-    if (!backgroundBuffer) {
-      console.error('[Image Processing] ERROR: Could not load background image from /public/backgrounds/');
-      throw new Error('Background image not found in /public/backgrounds/');
-    }
-    
-    // STEP 3: Resize background to match input image dimensions
-    const resizedBackground = await sharp(backgroundBuffer)
-      .resize(inputWidth, inputHeight, { fit: 'cover' })
-      .toBuffer();
-    
-    console.log(`[Image Processing] STEP 3: Resized background to match input: ${inputWidth}x${inputHeight}`);
-    
-    // STEP 4: Composite input image ON TOP of the background using sharp().composite()
-    // Transparent pixels in input will reveal background beneath
-    console.log(`[Image Processing] STEP 4: Compositing input image on top of background`);
-    const compositedBuffer = await sharp(resizedBackground)
-      .composite([
-        {
-          input: inputImageBuffer, // Layer 2: Input image (with transparency) on top
-        },
-      ])
-      .removeAlpha() // STEP 5: Return fully opaque output (no transparency)
-      .toBuffer();
-    
-    console.log(`[Image Processing] STEP 5: Final composited image (fully opaque): ${compositedBuffer.length} bytes`);
-    
-    // Convert to base64 and return
-    const compositedBase64 = compositedBuffer.toString('base64');
-    return compositedBase64;
+function selectBackground(username?: string) {
+  if (!username) return TAROT_BACKGROUNDS[0];
+  const score = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return TAROT_BACKGROUNDS[score % TAROT_BACKGROUNDS.length];
+}
 
-  } catch (error) {
-    console.error('[Image Processing] Error processing image:', error);
-    
-    // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes('Failed to fetch')) {
-        throw new Error('Failed to fetch the image. Please check the image URL or try uploading an image instead.');
-      }
-      if (error.message.includes('Invalid base64')) {
-        throw new Error('Invalid image format. Please try uploading a different image.');
-      }
-      if (error.message.includes('Background image not found')) {
-        throw new Error('Background image not found. Please ensure background images exist in /public/backgrounds/ folder.');
-      }
-      throw new Error(`Image processing failed: ${error.message}`);
+async function fetchImageBuffer(imageUrl: string): Promise<Buffer> {
+  if (imageUrl.startsWith('data:')) {
+    const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      throw new Error('Invalid base64 data URL format');
     }
-    
-    throw error;
+    return Buffer.from(matches[2], 'base64');
   }
+
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error('Failed to fetch avatar image');
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
-/**
- * Get the style name assigned to a username (for display purposes)
- */
+async function generateTransparentPortrait(avatarBuffer: Buffer, style: typeof OUTFIT_STYLES[0]): Promise<Buffer> {
+  ensureApiKey();
+
+  const base64 = avatarBuffer.toString('base64');
+  const prompt = buildTarotPrompt(style.description);
+
+  const result = await geminiClient.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          {
+            inlineData: {
+              data: base64,
+              mimeType: 'image/png',
+            },
+          },
+          { text: prompt },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'image/png',
+    },
+  });
+
+  const candidates: any[] = (result as any).candidates ?? [];
+  const parts = candidates[0]?.content?.parts ?? [];
+  const imagePart = parts.find((p: any) => p.inlineData)?.inlineData ?? null;
+
+  if (!imagePart?.data) {
+    console.error('Gemini response missing image data', JSON.stringify(result, null, 2));
+    throw new Error('Gemini did not return an edited image');
+  }
+
+  return Buffer.from(imagePart.data, 'base64');
+}
+
+async function compositeOnTarotBackground(avatarBuffer: Buffer, backgroundPath: string): Promise<Buffer> {
+  const backgroundAbsolutePath = join(process.cwd(), 'public', 'backgrounds', backgroundPath);
+  const backgroundBuffer = await fs.readFile(backgroundAbsolutePath);
+
+  const background = sharp(backgroundBuffer);
+  const backgroundMeta = await background.metadata();
+  const cardWidth = backgroundMeta.width || 1200;
+  const cardHeight = backgroundMeta.height || 1800;
+
+  const targetWidth = Math.round(cardWidth * 0.7);
+  const targetHeight = Math.round(cardHeight * 0.75);
+
+  const resizedAvatar = await sharp(avatarBuffer)
+    .resize({
+      width: targetWidth,
+      height: targetHeight,
+      fit: 'inside',
+    })
+    .png()
+    .toBuffer();
+
+  const resizedMeta = await sharp(resizedAvatar).metadata();
+  const finalAvatarWidth = resizedMeta.width || targetWidth;
+  const finalAvatarHeight = resizedMeta.height || targetHeight;
+
+  const left = Math.max(0, Math.round((cardWidth - finalAvatarWidth) / 2));
+  const centerY = cardHeight * 0.42;
+  const top = Math.max(0, Math.round(centerY - (finalAvatarHeight / 2)));
+
+  const composited = await background
+    .composite([
+      {
+        input: resizedAvatar,
+        left,
+        top,
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  return composited;
+}
+
+export async function generateParasolTarotCard(imageUrl: string, username?: string): Promise<{ imageBase64: string; style: string; }> {
+  const avatarBuffer = await fetchImageBuffer(imageUrl);
+  const style = getUserStyle(username || 'parasol');
+  const transparentPortrait = await generateTransparentPortrait(avatarBuffer, style);
+  const backgroundName = selectBackground(username);
+  const composited = await compositeOnTarotBackground(transparentPortrait, backgroundName);
+
+  return {
+    imageBase64: composited.toString('base64'),
+    style: style.name,
+  };
+}
+
 export function getAssignedStyleName(username: string): string {
   const style = getUserStyle(username);
   return style.name;

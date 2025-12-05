@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAssignedStyleName } from '@/lib/gemini-api';
+import { generateParasolTarotCard } from '@/lib/gemini-api';
 import { getCachedOutfit, saveOutfit } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
@@ -52,70 +52,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`[API] Processing image for user: ${username || 'unknown'}`);
 
-    // Convert imageUrl to a buffer for process-image endpoint
-    let imageBuffer: Buffer;
-    
-    if (imageUrl.startsWith('data:')) {
-      // Extract base64 data from data URL
-      const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!matches || matches.length !== 3) {
-        return NextResponse.json(
-          { error: 'Invalid base64 data URL format' },
-          { status: 400 }
-        );
-      }
-      const base64Data = matches[2];
-      imageBuffer = Buffer.from(base64Data, 'base64');
-    } else {
-      // Fetch the image from URL
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        return NextResponse.json(
-          { error: 'Failed to fetch image from URL' },
-          { status: 400 }
-        );
-      }
-      const imageArrayBuffer = await imageResponse.arrayBuffer();
-      imageBuffer = Buffer.from(imageArrayBuffer);
-    }
-
-    // Call the process-image endpoint (Sharp-based, no Gemini)
-    const formData = new FormData();
-    // Create a Blob from the buffer for FormData
-    const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
-    formData.append('image', imageBlob, 'image.png');
-    formData.append('username', username || 'default');
-
-    // Get the origin from the request URL
-    const origin = request.nextUrl.origin;
-    const processResponse = await fetch(`${origin}/api/process-image`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!processResponse.ok) {
-      const errorText = await processResponse.text();
-      console.error('[API] process-image failed:', errorText);
-      return NextResponse.json(
-        { error: `Failed to process image: ${errorText}` },
-        { status: processResponse.status }
-      );
-    }
-
-    // Convert the PNG response to base64
-    const outputBuffer = await processResponse.arrayBuffer();
-    const generatedImageBase64 = Buffer.from(outputBuffer).toString('base64');
+    const { imageBase64, style } = await generateParasolTarotCard(imageUrl, username);
 
     // Save to database for caching
     if (username) {
-      // Get the style that was assigned to this user
-      const style = getAssignedStyleName(username);
       const saved = await saveOutfit({
         handle: username,
         platform: 'twitter',
         style,
         originalImageUrl: imageUrl.startsWith('http') ? imageUrl : null,
-        generatedImageBase64,
+        generatedImageBase64: imageBase64,
       });
       
       if (saved) {
@@ -128,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Return the generated image as base64
     return NextResponse.json({
       success: true,
-      image: generatedImageBase64,
+      image: imageBase64,
       cached: false,
     });
   } catch (error) {
