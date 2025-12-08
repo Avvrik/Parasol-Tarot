@@ -26,7 +26,8 @@ export default function ResultsDisplay({
 
   const shareOnTwitter = () => {
     // Create shareable URL using the /outfit/[handle] route for proper OG metadata
-    const shareUrl = `${window.location.origin}/outfit/${encodeURIComponent(displayName)}`;
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tarot.buildwithparasol.io';
+    const shareUrl = `${baseUrl}/outfit/${encodeURIComponent(displayName)}`;
     
     // Open Twitter with pre-filled text and URL
     const tweetText = encodeURIComponent(
