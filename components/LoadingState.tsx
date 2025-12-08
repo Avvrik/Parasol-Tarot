@@ -7,13 +7,13 @@ interface LoadingStateProps {
 export default function LoadingState({ stage }: LoadingStateProps) {
   const messages = {
     resolving: {
-      title: 'Finding your profile...',
+      title: 'Reading your essence…',
       description: 'Fetching your Twitter avatar',
       icon: '🔍',
     },
     generating: {
-      title: 'Revealing your tarot card...',
-      description: 'AI is transforming you into a Parasol-branded tarot card!',
+      title: 'The crypto stars are aligning…',
+      description: 'The arcana work in silence to reveal your nature.',
       icon: '🎴',
     },
   };
@@ -29,10 +29,10 @@ export default function LoadingState({ stage }: LoadingStateProps) {
         </div>
       </div>
       <div className="text-center space-y-2">
-        <h3 className="text-xl font-semibold text-gray-800">
+        <h3 className="text-xl font-semibold text-brand-secondary font-moche">
           {current.title}
         </h3>
-        <p className="text-sm text-gray-600">{current.description}</p>
+        <p className="text-sm text-brand-secondary/80 font-rubik">{current.description}</p>
       </div>
       <div className="flex gap-2">
         <div className="w-2 h-2 rounded-full bg-brand-primary animate-bounce"></div>

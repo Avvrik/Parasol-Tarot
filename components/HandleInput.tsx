@@ -54,12 +54,12 @@ export default function HandleInput({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Input Section */}
       <div className="space-y-3">
-        <label className="block text-lg font-semibold text-gray-800 text-center">
-          Enter Your Twitter Handle
+        <label className="block text-lg font-semibold text-brand-secondary text-center font-moche">
+          Tell me your Twitter handle, wanderer…✨
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <span className="text-gray-400 text-lg">@</span>
+            <span className="text-brand-secondary/70 text-lg">@</span>
           </div>
           <input
             type="text"
@@ -68,15 +68,15 @@ export default function HandleInput({
             placeholder="elonmusk"
             disabled={isLoading}
             className={`
-              w-full pl-10 pr-4 py-4 text-lg rounded-2xl border-2 
+              w-full pl-10 pr-4 py-4 text-lg rounded-2xl border-2 bg-brand-accent/50 text-brand-secondary font-rubik
               focus:outline-none focus:ring-4 focus:ring-brand-primary/30 focus:border-brand-primary
-              disabled:bg-gray-100 disabled:cursor-not-allowed
-              transition-all duration-200
-              ${error ? 'border-red-400' : 'border-gray-300 hover:border-brand-primary/50'}
+              disabled:bg-brand-accent/30 disabled:cursor-not-allowed
+              transition-all duration-200 placeholder:text-brand-secondary/50
+              ${error ? 'border-brand-highlight' : 'border-brand-primary/40 hover:border-brand-primary/60'}
             `}
           />
           {error && (
-            <p className="mt-2 text-sm text-red-600 text-center">{error}</p>
+            <p className="mt-2 text-sm text-brand-highlight text-center font-rubik">{error}</p>
           )}
         </div>
       </div>
@@ -86,12 +86,12 @@ export default function HandleInput({
         type="submit"
         disabled={isLoading || !value.trim() || !!error}
         className={`
-          w-full py-4 px-6 rounded-2xl font-bold text-lg text-white
+          w-full py-4 px-6 rounded-2xl font-bold text-lg text-white font-rubik
           transition-all duration-200 shadow-lg
           ${
             isLoading || !value.trim() || error
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-brand hover:shadow-2xl hover:scale-105 active:scale-95'
+              ? 'bg-brand-accent/50 cursor-not-allowed'
+              : 'bg-brand-accent hover:bg-brand-accent/90 hover:shadow-2xl hover:scale-105 active:scale-95'
           }
         `}
       >
@@ -113,10 +113,10 @@ export default function HandleInput({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Revealing Your Tarot Card...
+            The crypto stars are aligning…
           </span>
         ) : (
-          '🎴 Reveal My Tarot Card 🎴'
+          '🔮 Unveil My Fate 🔮'
         )}
       </button>
     </form>

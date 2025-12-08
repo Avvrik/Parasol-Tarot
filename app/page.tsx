@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import PlatformSelector from '@/components/PlatformSelector';
 import HandleInput from '@/components/HandleInput';
 import LoadingState from '@/components/LoadingState';
@@ -242,17 +243,23 @@ export default function Home() {
         {/* Header - Only show on input state */}
         {state === 'input' && (
           <header className="text-center space-y-4 mb-12 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-brand bg-clip-text text-transparent">
-              {brandName}
-            </h1>
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Enter your Twitter handle and discover your tarot card! Get transformed into a Parasol-branded tarot card! 🎴✨
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Parasol2.png"
+                alt="Parasol"
+                width={200}
+                height={80}
+                className="object-contain"
+              />
+            </div>
+            <p className="text-lg text-brand-secondary/90 max-w-2xl mx-auto font-rubik">
+              Offer your Twitter handle to the cards, and let the Parasol arcana unveil your prophecy. 🔮🌟
             </p>
           </header>
         )}
 
         {/* Main Content */}
-        <div className={`bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 ${state === 'input' ? 'border-4 border-brand-primary/20' : ''}`}>
+        <div className={`bg-gradient-to-br from-[#3D405B] via-[#81B29A] to-[#3D405B] backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 ${state === 'input' ? 'border-4 border-brand-primary/40' : ''}`}>
           {state === 'input' && (
             <div className="space-y-6 animate-fade-in">
               <HandleInput
@@ -283,24 +290,24 @@ export default function Home() {
             <div className="space-y-6 text-center animate-fade-in">
               <div className="text-6xl">😔</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-800">
+                <h3 className="text-xl font-semibold text-brand-secondary font-moche">
                   Oops! Something went wrong
                 </h3>
-                <p className="text-red-600">{error}</p>
-                <p className="text-gray-600 text-sm mt-2">
+                <p className="text-brand-highlight font-rubik">{error}</p>
+                <p className="text-brand-secondary/80 text-sm mt-2 font-rubik">
                   Can't find your avatar? Upload your own photo instead!
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={handleReset}
-                  className="px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="px-6 py-3 rounded-xl font-semibold text-brand-secondary bg-brand-accent/80 hover:bg-brand-accent hover:scale-105 active:scale-95 transition-all duration-200 font-rubik"
                 >
                   Try Another Handle
                 </button>
                 <button
                   onClick={handleUploadClick}
-                  className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-brand hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-brand hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 font-rubik"
                 >
                   📤 Upload Your Photo
                 </button>
@@ -312,20 +319,20 @@ export default function Home() {
             <div className="space-y-6 text-center animate-fade-in">
               <div className="text-6xl">📸</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-800">
+                <h3 className="text-xl font-semibold text-brand-secondary font-moche">
                   Upload Your Photo
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-brand-secondary/80 font-rubik">
                   Upload a photo of yourself to generate your tarot card!
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-brand-secondary/70 font-rubik">
                   Handle: <span className="font-semibold text-brand-primary">{handle}</span>
                 </p>
               </div>
               
               <div className="max-w-md mx-auto">
                 <label className="block">
-                  <div className="border-2 border-dashed border-brand-primary rounded-xl p-8 cursor-pointer hover:bg-brand-primary/5 transition-colors">
+                  <div className="border-2 border-dashed border-brand-primary/50 rounded-xl p-8 cursor-pointer hover:bg-brand-primary/10 transition-colors">
                     <input
                       type="file"
                       accept="image/*"
@@ -334,10 +341,10 @@ export default function Home() {
                     />
                     <div className="space-y-2">
                       <div className="text-4xl">🖼️</div>
-                      <p className="text-gray-700 font-medium">
+                      <p className="text-brand-secondary font-medium font-rubik">
                         Click to select a photo
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-brand-secondary/70 font-rubik">
                         JPG, PNG, or GIF (max 5MB)
                       </p>
                     </div>
@@ -347,7 +354,7 @@ export default function Home() {
 
               <button
                 onClick={handleReset}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                className="text-sm text-brand-secondary/80 hover:text-brand-secondary underline font-rubik"
               >
                 ← Back to search
               </button>
@@ -356,7 +363,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-sm text-gray-600">
+        <footer className="mt-8 text-center text-sm text-brand-secondary/60 font-rubik">
           <p>Powered by Google Gemini AI</p>
         </footer>
       </div>

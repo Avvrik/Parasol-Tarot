@@ -1,6 +1,6 @@
 /**
  * Supabase Client Configuration
- * Database for storing generated outfit images and caching results
+ * Database for tracking Twitter handles
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -18,125 +18,107 @@ export const supabase = supabaseUrl && supabaseAnonKey
   : null;
 
 // Database types
-export interface OutfitRecord {
+export interface TwitterHandleRecord {
   id: string;
   handle: string;
-  platform: string;
-  style: string;
-  original_image_url: string | null;
-  generated_image_base64: string;
   created_at: string;
-  updated_at: string;
 }
 
 /**
- * Get cached outfit for a handle
+ * Check if a handle has been processed before
  */
-export async function getCachedOutfit(handle: string): Promise<OutfitRecord | null> {
+export async function hasHandle(handle: string): Promise<boolean> {
   if (!supabase) {
     console.warn('[Supabase] Client not initialized');
-    return null;
+    return false;
   }
 
   const normalizedHandle = handle.toLowerCase();
-  console.log(`[Supabase] Looking for cached outfit for: ${normalizedHandle}`);
+  console.log(`[Supabase] Checking if handle exists: ${normalizedHandle}`);
 
   try {
     const { data, error } = await supabase
-      .from('outfits')
-      .select('*')
+      .from('twitter_handles')
+      .select('handle')
       .eq('handle', normalizedHandle)
       .single();
 
     if (error) {
       if (error.code === 'PGRST116') { 
-        console.log(`[Supabase] No cached outfit found for: ${normalizedHandle}`);
+        console.log(`[Supabase] Handle not found: ${normalizedHandle}`);
+        return false;
       } else {
-        console.error('[Supabase] Error fetching cached outfit:', error);
+        console.error('[Supabase] Error checking handle:', error);
+        return false;
       }
-      return null;
     }
 
-    console.log(`[Supabase] ✅ Found cached outfit for: ${normalizedHandle}`);
-    return data as OutfitRecord;
+    console.log(`[Supabase] ✅ Handle exists: ${normalizedHandle}`);
+    return true;
   } catch (error) {
-    console.error('[Supabase] Exception fetching cached outfit:', error);
-    return null;
+    console.error('[Supabase] Exception checking handle:', error);
+    return false;
   }
 }
 
 /**
- * Save generated outfit to database
+ * Save a Twitter handle to database
  */
-export async function saveOutfit(data: {
-  handle: string;
-  platform: string;
-  style: string;
-  originalImageUrl: string | null;
-  generatedImageBase64: string;
-}): Promise<boolean> {
+export async function saveHandle(handle: string): Promise<boolean> {
   if (!supabase) {
-    console.warn('[Supabase] Client not initialized, cannot save outfit');
+    console.warn('[Supabase] Client not initialized, cannot save handle');
     return false;
   }
 
-  const normalizedHandle = data.handle.toLowerCase();
-  console.log(`[Supabase] Attempting to save outfit for: ${normalizedHandle}`);
+  const normalizedHandle = handle.toLowerCase();
+  console.log(`[Supabase] Attempting to save handle: ${normalizedHandle}`);
 
   try {
     const { error } = await supabase
-      .from('outfits')
+      .from('twitter_handles')
       .upsert({
         handle: normalizedHandle,
-        platform: data.platform,
-        style: data.style,
-        original_image_url: data.originalImageUrl,
-        generated_image_base64: data.generatedImageBase64,
-        updated_at: new Date().toISOString(),
       }, {
         onConflict: 'handle',
       });
 
     if (error) {
-      console.error('[Supabase] ❌ Error saving outfit:', error);
+      console.error('[Supabase] ❌ Error saving handle:', error);
       return false;
     }
 
-    console.log(`[Supabase] ✅ Successfully saved outfit for ${normalizedHandle} with style: ${data.style}`);
+    console.log(`[Supabase] ✅ Successfully saved handle: ${normalizedHandle}`);
     return true;
   } catch (error) {
-    console.error('[Supabase] ❌ Exception saving outfit:', error);
+    console.error('[Supabase] ❌ Exception saving handle:', error);
     return false;
   }
 }
 
 /**
- * Get all outfits for gallery (paginated)
+ * Get all handles (paginated)
  */
-export async function getAllOutfits(limit = 50, offset = 0): Promise<OutfitRecord[]> {
+export async function getAllHandles(limit = 50, offset = 0): Promise<TwitterHandleRecord[]> {
   if (!supabase) {
-    console.error('[Supabase] Client not initialized - cannot fetch outfits');
+    console.error('[Supabase] Client not initialized - cannot fetch handles');
     return [];
   }
 
   try {
-    // Fetch with a smaller limit to avoid timeout (max 6 at a time due to large base64 images)
-    const actualLimit = Math.min(limit, 6);
-    
     const { data, error } = await supabase
-      .from('outfits')
+      .from('twitter_handles')
       .select('*')
       .order('created_at', { ascending: false })
-      .range(offset, offset + actualLimit - 1);
+      .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('[Supabase] Error fetching outfits:', error);
+      console.error('[Supabase] Error fetching handles:', error);
       return [];
     }
 
-    return (data as OutfitRecord[]) || [];
+    return (data as TwitterHandleRecord[]) || [];
   } catch (error) {
-    console.error('[Supabase] Exception fetching outfits:', error);
+    console.error('[Supabase] Exception fetching handles:', error);
     return [];
   }
 }

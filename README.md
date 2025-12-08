@@ -1,15 +1,14 @@
-# Twitter Outfit Generator
+# Parasol Tarot Card Generator
 
-A Next.js application that generates custom styled outfit images for Twitter profiles using Google Gemini AI. Users enter their Twitter handle, and the system creates a personalized outfit image while preserving their face and background.
+A Next.js application that generates personalized tarot cards from Twitter avatars using Google Gemini AI. Users enter their Twitter handle, and the system creates a mystical tarot card featuring their portrait.
 
 ## Features
 
-- 🎨 **AI-Powered Image Editing** - Uses Google Gemini 2.5 Flash to edit clothing while preserving face/background
+- 🎨 **AI-Powered Image Generation** - Uses Google Gemini to create tarot cards from Twitter avatars
 - 🐦 **Twitter Integration** - Fetches avatars via Unavatar.io (no Twitter API needed)
-- 💾 **Smart Caching** - Stores generated images in Supabase to avoid regeneration
-- 🎯 **Deterministic Styles** - Same user always gets the same style
+- 💾 **Handle Tracking** - Stores Twitter handles in Supabase database
 - 📱 **Responsive Design** - Beautiful UI built with Tailwind CSS
-- 🔗 **Social Sharing** - Share outfits on Twitter with OG image support
+- 🔗 **Social Sharing** - Share tarot cards on Twitter
 
 ## Tech Stack
 
@@ -32,7 +31,7 @@ A Next.js application that generates custom styled outfit images for Twitter pro
 
 1. **Clone or navigate to the project:**
    ```bash
-   cd twitter-outfit-generator
+   cd Parasol-Tarot
    ```
 
 2. **Install dependencies:**
@@ -57,7 +56,7 @@ A Next.js application that generates custom styled outfit images for Twitter pro
 4. **Set up Supabase database:**
    - Create a new Supabase project
    - Run the SQL from `supabase/schema.sql` in the SQL Editor
-   - This creates the `outfits` table with proper indexes and policies
+   - This creates the `twitter_handles` table with proper indexes and policies
 
 5. **Run the development server:**
    ```bash
@@ -68,25 +67,7 @@ A Next.js application that generates custom styled outfit images for Twitter pro
 
 ## Customization
 
-### 1. Customize Outfit Styles
-
-Edit `lib/gemini-api.ts` to define your outfit styles:
-
-```typescript
-const OUTFIT_STYLES = [
-  {
-    name: 'YOUR_STYLE_1',
-    description: `**YOUR_STYLE_1**: Your style description
-- Key characteristics
-- Color scheme
-- Accessories
-- ACCESSORIES: Specific accessories`,
-  },
-  // Add more styles...
-];
-```
-
-### 2. Customize Brand Colors
+### 1. Customize Brand Colors
 
 Edit `tailwind.config.ts`:
 
@@ -100,24 +81,24 @@ colors: {
 
 Also update `BRAND_COLORS` in `lib/gemini-api.ts` to match.
 
-### 3. Customize Brand Name
+### 2. Customize Brand Name
 
 Set `NEXT_PUBLIC_BRAND_NAME` in your `.env.local` file, or update it in the code.
 
-### 4. Customize UI Text
+### 3. Customize UI Text
 
 Edit the components in `components/` and `app/page.tsx` to change UI text and messaging.
 
 ## Project Structure
 
 ```
-twitter-outfit-generator/
+Parasol-Tarot/
 ├── app/
 │   ├── api/
-│   │   ├── generate-outfit/    # Main outfit generation endpoint
+│   │   ├── generate-outfit/    # Main tarot card generation endpoint
 │   │   ├── resolve-identity/   # Twitter avatar fetching
 │   │   └── og-image/           # Open Graph images
-│   ├── outfit/[handle]/        # Shareable outfit pages
+│   ├── outfit/[handle]/        # Shareable tarot card pages
 │   ├── layout.tsx              # Root layout
 │   ├── page.tsx                # Main page
 │   └── globals.css              # Global styles
@@ -125,9 +106,9 @@ twitter-outfit-generator/
 │   ├── HandleInput.tsx         # Twitter handle input
 │   ├── LoadingState.tsx        # Loading animations
 │   ├── PlatformSelector.tsx    # Platform UI
-│   └── ResultsDisplay.tsx       # Results display
+│   └── ResultsDisplay.tsx      # Results display
 ├── lib/
-│   ├── gemini-api.ts           # Gemini API client (CUSTOMIZE STYLES HERE)
+│   ├── gemini-api.ts           # Gemini API client
 │   ├── supabase.ts             # Supabase client
 │   └── utils.ts                # Utility functions
 ├── supabase/
@@ -161,7 +142,7 @@ Fetches Twitter avatar for a handle.
 ```
 
 ### `POST /api/generate-outfit`
-Generates or retrieves cached outfit image.
+Generates a tarot card from an avatar image.
 
 **Request:**
 ```json
@@ -175,13 +156,12 @@ Generates or retrieves cached outfit image.
 ```json
 {
   "success": true,
-  "image": "base64_image_data",
-  "cached": false
+  "image": "base64_image_data"
 }
 ```
 
 ### `GET /api/og-image?handle=username`
-Returns outfit image for Open Graph/social sharing.
+Returns tarot card image for Open Graph/social sharing (currently returns 404 as images are not cached).
 
 ## Deployment
 
@@ -206,10 +186,11 @@ Make sure to set all environment variables in your deployment platform.
 
 1. **User enters Twitter handle** → Frontend calls `/api/resolve-identity`
 2. **Fetch avatar** → Uses Unavatar.io to get profile picture
-3. **Check cache** → Looks for existing outfit in Supabase
-4. **Generate outfit** → If not cached, sends image + prompt to Gemini API
-5. **Save to cache** → Stores result in Supabase for future use
-6. **Display result** → Shows generated outfit with download/share options
+3. **Generate tarot card** → Sends image to Gemini API for background removal and processing
+4. **Add glow effect** → Sharp adds a luminous glow around the portrait
+5. **Composite on card** → Portrait is composited onto tarot card background
+6. **Save handle** → Stores Twitter handle in Supabase database
+7. **Display result** → Shows generated tarot card with download/share options
 
 ## Environment Variables
 
@@ -232,7 +213,7 @@ Make sure to set all environment variables in your deployment platform.
 - Try a different handle
 - Use the upload feature as a fallback
 
-### "Failed to generate outfit image"
+### "Failed to generate tarot card"
 - Check your Gemini API key is valid
 - Check API quota/limits
 - Try again (sometimes API has temporary issues)

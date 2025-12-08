@@ -25,9 +25,6 @@ const geminiClient = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 });
 
-type EyePoint = { x: number; y: number };
-type EyePositions = { leftEye: EyePoint; rightEye: EyePoint };
-
 // -----------------------------------------------------------------------------
 // Prompts
 // -----------------------------------------------------------------------------
@@ -259,12 +256,15 @@ async function generateTransparentPortrait(avatarBuffer: Buffer): Promise<Buffer
         throw new Error(`Model ${model} did not return image data`);
       }
 
-      let img = Buffer.from(inline.data, 'base64');
+      let img: Buffer = Buffer.from(inline.data, 'base64');
 
-      img = await sharp(img).ensureAlpha().png().toBuffer();
+      img = await sharp(img).ensureAlpha().png().toBuffer() as Buffer;
       img = await removeCheckerboardBackground(img);
-      img = await sharp(img).ensureAlpha().trim({ threshold: 0 }).png().toBuffer();
+      img = await sharp(img).ensureAlpha().trim({ threshold: 0 }).png().toBuffer() as Buffer;
       img = await applyBottomFeather(img);
+      
+      // Convert to black and white
+      img = await sharp(img).greyscale().ensureAlpha().png().toBuffer() as Buffer;
 
       return img;
     } catch (err: any) {
@@ -277,138 +277,6 @@ async function generateTransparentPortrait(avatarBuffer: Buffer): Promise<Buffer
 }
 
 // -----------------------------------------------------------------------------
-// Gemini: eye detection
-// -----------------------------------------------------------------------------
-
-async function detectEyePositionsWithGemini(
-  avatarBuffer: Buffer
-): Promise<EyePositions | null> {
-  ensureApiKey();
-
-  const meta = await sharp(avatarBuffer).metadata();
-  const width = meta.width ?? 0;
-  const height = meta.height ?? 0;
-  if (!width || !height) return null;
-
-  const base64 = avatarBuffer.toString('base64');
-
-  const prompt = `
-You receive a PNG portrait image of a person (head and upper body) on a transparent background.
-Your job is to locate the CENTER of each HUMAN EYE on the FACE and output their pixel coordinates.
-
-Important:
-- "Eye" means the real human eye (eyelids, sclera, iris, pupil).
-- Ignore any decorative shapes, stickers, spirals, or logos on headphones, hair, cheeks, forehead, or background.
-
-Coordinate system:
-- Use THIS image's pixels.
-- (0,0) is the TOP-LEFT corner.
-- "x" increases to the right, "y" increases downward.
-- width = ${width}, height = ${height}.
-
-Which eye:
-- "leftEye" is on the LEFT side of the image from the viewer's perspective.
-- "rightEye" is on the RIGHT side.
-
-Output (STRICT):
-Return ONLY:
-
-{"leftEye":{"x":123,"y":45},"rightEye":{"x":234,"y":47}}
-
-- x and y must be numbers.
-- No comments, no extra fields, no explanations.
-`.trim();
-
-  const model =
-    process.env.GEMINI_EYE_MODEL ||
-    process.env.GEMINI_MODEL ||
-    'gemini-1.5-flash';
-
-  try {
-    const result = await geminiClient.models.generateContent({
-      model,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { inlineData: { data: base64, mimeType: 'image/png' } },
-            { text: prompt },
-          ],
-        },
-      ],
-    } as any);
-
-    const text =
-      (result as any).candidates?.[0]?.content?.parts
-        ?.map((p: any) => p.text || '')
-        .join('') || '';
-
-    if (!text) return null;
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      console.warn('[Gemini Eyes] JSON parse failed:', text);
-      return null;
-    }
-
-    if (
-      !parsed ||
-      !parsed.leftEye ||
-      !parsed.rightEye ||
-      typeof parsed.leftEye.x !== 'number' ||
-      typeof parsed.leftEye.y !== 'number' ||
-      typeof parsed.rightEye.x !== 'number' ||
-      typeof parsed.rightEye.y !== 'number'
-    ) {
-      console.warn('[Gemini Eyes] Bad shape:', parsed);
-      return null;
-    }
-
-    const clamp = (v: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, v));
-
-    let left: EyePoint = {
-      x: clamp(Math.round(parsed.leftEye.x), 0, width - 1),
-      y: clamp(Math.round(parsed.leftEye.y), 0, height - 1),
-    };
-    let right: EyePoint = {
-      x: clamp(Math.round(parsed.rightEye.x), 0, width - 1),
-      y: clamp(Math.round(parsed.rightEye.y), 0, height - 1),
-    };
-
-    // fix swapped
-    if (left.x > right.x) {
-      [left, right] = [right, left];
-    }
-
-    // normalize Y into plausible band
-    const minY = Math.round(height * 0.18);
-    const maxY = Math.round(height * 0.55);
-    const avgY = clamp(Math.round((left.y + right.y) / 2), minY, maxY);
-    left.y = avgY;
-    right.y = avgY;
-
-    // inter-eye sanity
-    const dx = right.x - left.x;
-    const minDx = width * 0.08;
-    const maxDx = width * 0.5;
-    if (dx < minDx || dx > maxDx) {
-      const cx = width / 2;
-      const half = clamp(width * 0.14, minDx / 2, maxDx / 2);
-      left.x = Math.round(cx - half);
-      right.x = Math.round(cx + half);
-    }
-
-    console.log('[Gemini Eyes] final', { left, right });
-    return { leftEye: left, rightEye: right };
-  } catch (err: any) {
-    console.warn('[Gemini Eyes] error', err.message);
-    return null;
-  }
-}
-
 // -----------------------------------------------------------------------------
 // Glow – stronger + larger
 // -----------------------------------------------------------------------------
@@ -516,107 +384,10 @@ async function compositeOnTarotBackground(
   const avatarWidth = avatarMeta.width || maxAvatarWidth;
   const avatarHeight = avatarMeta.height || maxAvatarHeight;
 
-  // 2. Eye overlays
-  const eyeFiles = ['eye1.png', 'eye2.png', 'eye3.png'];
-  const leftEyeFile = eyeFiles[Math.floor(Math.random() * eyeFiles.length)];
-  const rightEyeFile = eyeFiles[Math.floor(Math.random() * eyeFiles.length)];
-  let avatarWithEyes = avatar;
+  // 2. Strong glow
+  const avatarWithGlow = await addGlowAroundFigure(avatar);
 
-  try {
-    const leftEyePath = join(process.cwd(), 'public', 'eyes', leftEyeFile);
-    const rightEyePath = join(process.cwd(), 'public', 'eyes', rightEyeFile);
-
-    const [leftEyeBuf, rightEyeBuf] = await Promise.all([
-      fs.readFile(leftEyePath),
-      fs.readFile(rightEyePath),
-    ]);
-
-    // slightly smaller stickers, so misalignment is less noticeable
-    const eyeWidth = Math.round(avatarWidth * 0.10);
-    const eyeHeight = Math.round(eyeWidth * 0.6);
-
-    const [leftResized, rightResized] = await Promise.all([
-      sharp(leftEyeBuf)
-        .resize({
-          width: eyeWidth,
-          height: eyeHeight,
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .ensureAlpha()
-        .png()
-        .toBuffer(),
-      sharp(rightEyeBuf)
-        .resize({
-          width: eyeWidth,
-          height: eyeHeight,
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .ensureAlpha()
-        .png()
-        .toBuffer(),
-    ]);
-
-    let eyePositions = await detectEyePositionsWithGemini(avatar);
-    if (!eyePositions) {
-      const y = Math.round(avatarHeight * 0.32);
-      eyePositions = {
-        leftEye: { x: Math.round(avatarWidth * 0.33), y },
-        rightEye: { x: Math.round(avatarWidth * 0.67), y },
-      };
-    }
-
-    const clamp = (v: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, v));
-
-    // small vertical offset upwards so stickers sit on iris, not cheeks
-    const verticalOffset = Math.round(eyeHeight * 0.15);
-
-    const overlays = [
-      {
-        input: leftResized,
-        left: clamp(
-          eyePositions.leftEye.x - Math.round(eyeWidth / 2),
-          0,
-          Math.max(0, avatarWidth - eyeWidth),
-        ),
-        top: clamp(
-          eyePositions.leftEye.y - Math.round(eyeHeight / 2) - verticalOffset,
-          0,
-          Math.max(0, avatarHeight - eyeHeight),
-        ),
-        blend: 'over' as const,
-      },
-      {
-        input: rightResized,
-        left: clamp(
-          eyePositions.rightEye.x - Math.round(eyeWidth / 2),
-          0,
-          Math.max(0, avatarWidth - eyeWidth),
-        ),
-        top: clamp(
-          eyePositions.rightEye.y - Math.round(eyeHeight / 2) - verticalOffset,
-          0,
-          Math.max(0, avatarHeight - eyeHeight),
-        ),
-        blend: 'over' as const,
-      },
-    ];
-
-    avatarWithEyes = await sharp(avatar)
-      .composite(overlays)
-      .png()
-      .toBuffer();
-  } catch (e) {
-    console.warn('[Eyes] overlay failed', e);
-    avatarWithEyes = avatar;
-  }
-
-  // 3. Strong glow AFTER eyes and feather
-  const avatarWithGlow = await addGlowAroundFigure(avatarWithEyes);
-
-  // 4. Position on card
+  // 3. Position on card
   const avatarLeft = Math.max(0, Math.round((cardWidth - avatarWidth) / 2));
   const freeVerticalSpace = illustrationBottom - minTop - avatarHeight;
   const avatarTop = Math.max(

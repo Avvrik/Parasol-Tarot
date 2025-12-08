@@ -81,7 +81,7 @@
 }
 
 body {
-  @apply bg-gradient-to-br from-[#F4F1DE] via-[#F2CC8F] to-[#81B29A];
+  @apply bg-[#3D405B];
   font-family: 'Rubik', sans-serif;
 }
 

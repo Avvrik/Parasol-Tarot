@@ -1,56 +1,41 @@
-# How to Clear Cache and Regenerate Images
+# Twitter Handles Database Management
 
-## Method 1: Use the Regenerate Button (Easiest)
+The Supabase database now only tracks Twitter handles that have been processed, not cached images.
 
-After generating a fighter image, you'll see a **"🔄 Regenerate Fighter"** button below the image. Click it to force a new generation that bypasses the cache.
+## View Handles in Supabase
 
-## Method 2: Clear Cache from Supabase Database
+1. Go to your Supabase project dashboard
+2. Navigate to **Table Editor** → **twitter_handles** table
+3. View all handles that have been processed
 
-If you want to completely clear the cache for a specific handle or all handles:
+## Clear Handles from Database
 
 ### Option A: Clear a Specific Handle
 
 1. Go to your Supabase project dashboard
-2. Navigate to **Table Editor** → **outfits** table
-3. Find the row with the handle you want to clear
+2. Navigate to **Table Editor** → **twitter_handles** table
+3. Find the row with the handle you want to remove
 4. Delete that row
 
-### Option B: Clear All Cache
+### Option B: Clear All Handles
 
 Run this SQL in the Supabase SQL Editor:
 
 ```sql
--- Clear all cached outfits
-DELETE FROM outfits;
+-- Clear all handles
+DELETE FROM twitter_handles;
 ```
 
-### Option C: Clear Cache for a Specific Handle via SQL
+### Option C: Clear a Specific Handle via SQL
 
 ```sql
 -- Replace 'username' with the actual handle
-DELETE FROM outfits WHERE handle = LOWER('username');
-```
-
-## Method 3: Force Regenerate via API
-
-You can also force regeneration by calling the API directly with `forceRegenerate: true`:
-
-```javascript
-fetch('/api/generate-outfit', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ 
-    imageUrl: 'https://example.com/avatar.jpg',
-    username: 'handle',
-    forceRegenerate: true  // This bypasses cache
-  }),
-});
+DELETE FROM twitter_handles WHERE handle = LOWER('username');
 ```
 
 ## Notes
 
-- The cache is stored in the Supabase `outfits` table
-- Each handle gets one cached entry
-- Regenerating will create a new image (may vary due to AI generation)
-- The same handle will always get the same fighter style (deterministic based on username hash)
+- The database only stores Twitter handles, not images
+- Each handle is stored once (unique constraint)
+- Handles are tracked with a timestamp of when they were first processed
 
